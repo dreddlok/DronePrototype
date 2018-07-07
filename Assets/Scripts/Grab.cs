@@ -13,20 +13,57 @@ public class Grab : MonoBehaviour {
     private GameObject grabbedObject;
     private Transform componentBase;
     private bool grabbing = false;
+    private bool rightTouch;
 
-	// Update is called once per frame
-	void Update () {
+    private void Start()
+    {
+        if (transform.parent.GetComponent<TouchController>().controller == OVRInput.Controller.RTouch)
+        {
+            rightTouch = true;
+        } else
+        {
+            rightTouch = false;
+        }
+    }
+
+    // Update is called once per frame
+    void Update () {
 
         OVRInput.Update();
         OVRInput.FixedUpdate();
 
-        if (grabbing && Input.GetAxis("RGripTrigger") < 1)
+        if (grabbing)
         {                
-            DropObject();
+            if (rightTouch)
+            {
+                if (Input.GetAxis("RGripTrigger") < 1)
+                {
+                     DropObject();
+                }
+            }
+            else
+            {
+                if (Input.GetAxis("LGripTrigger") < 1)
+                {
+                    DropObject();
+                }
+            }
         }
-        if (!grabbing && Input.GetAxis("RGripTrigger") == 1)
+        if (!grabbing)
         {              
-            GrabObject();
+            if (rightTouch) //check to see if this is the right or left controller
+            {
+                if (Input.GetAxis("RGripTrigger") == 1)
+                {
+                    GrabObject();
+                }                
+            } else
+            {
+                if (Input.GetAxis("LGripTrigger") == 1)
+                {
+                    GrabObject();
+                }
+            }
         }
         if (grabbing && grabbedObject != null)
         {
@@ -42,10 +79,14 @@ public class Grab : MonoBehaviour {
         {
             AudioSource.PlayClipAtPoint(grabSFX, transform.position);
             grabbedObject = grabbable;
-            grabbedObject.transform.position = transform.position;// += new Vector3(0, .1f);
-            componentBase = grabbedObject.transform.parent;
-            DroneComponent droneComponent = grabbedObject.GetComponent<DroneComponent>();
-            droneComponent.onStand = false;
+            //grabbedObject.transform.position = transform.position;
+            if (grabbedObject.tag == "Wing" || grabbedObject.tag == "Nose" || grabbedObject.tag == "Fuselage" || grabbedObject.tag == "Engine")
+            {
+                componentBase = grabbedObject.transform.parent;
+                DroneComponent droneComponent = grabbedObject.GetComponent<DroneComponent>();
+                droneComponent.onStand = false;
+                
+            }
             grabbedObject.transform.parent = transform;
         }
         else
@@ -90,11 +131,18 @@ public class Grab : MonoBehaviour {
         if (grabbedObject !=null)
         {
             AudioSource.PlayClipAtPoint(dropSFX, transform.position);
-            grabbedObject.transform.parent = componentBase;
-            DroneComponent droneComponent = grabbedObject.GetComponent<DroneComponent>();
-            grabbedObject.transform.position = droneComponent.defaultPos;
-            grabbedObject.transform.rotation = droneComponent.defaultRot;
-            droneComponent.onStand = true;
+            if (grabbedObject.tag == "Wing" || grabbedObject.tag == "Nose" || grabbedObject.tag == "Fuselage" || grabbedObject.tag == "Engine")
+            {
+                grabbedObject.transform.parent = componentBase;
+                DroneComponent droneComponent = grabbedObject.GetComponent<DroneComponent>();
+                grabbedObject.transform.position = droneComponent.defaultPos;
+                grabbedObject.transform.rotation = droneComponent.defaultRot;
+                droneComponent.onStand = true;
+            }
+            else
+            {
+                grabbedObject.transform.parent = null;
+            }
         }
     }
 

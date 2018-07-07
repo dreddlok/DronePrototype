@@ -13,7 +13,7 @@ public class Flying : MonoBehaviour {
     public float maxRotation;
     public float tiltAngle = 90;
     public float smooth = 1.5f; // speed at which the drone re-orients itself
-    public float firingRate;
+    public float firingRate = 80;
     public Transform launchParentTransform;
     public enum FlightControlMode {MotionControls, Thumbstick };
     public FlightControlMode controlMode;
@@ -26,12 +26,15 @@ public class Flying : MonoBehaviour {
     public GameObject fuselage;
     public GameObject nose;
     public GameObject wing;
+    public ShipDetails shipDetails;
+    public AudioClip errorSFX;
 
     private bool droneAvailable;
     private Vector3 currentAngle;
     private bool inFlight = false;
     private Vector3 startPos;
     private Quaternion startRot;
+    private bool fireTriggerReleased = true;
 
     private void Start()
     {
@@ -61,12 +64,14 @@ public class Flying : MonoBehaviour {
             Accelerate();            
             GetComponent<AudioSource>().pitch = speed; 
             transform.position += transform.forward * Time.deltaTime * speed;
-            if (OVRInput.GetDown(OVRInput.RawButton.RIndexTrigger))
-            {
-                InvokeRepeating("Firing", 0.0001f, firingRate);
+            if (Input.GetAxis("FireTrigger") == 1 && fireTriggerReleased == false)
+            {                
+                Firing();
+                fireTriggerReleased = true;
             }
-            if (OVRInput.GetUp(OVRInput.RawButton.RIndexTrigger))
+            if (Input.GetAxis("FireTrigger") < 1)
             {
+                fireTriggerReleased = false;
                 CancelInvoke("Firing");
             }
 
@@ -74,13 +79,45 @@ public class Flying : MonoBehaviour {
         {
             if (Input.GetButtonDown(buttonName: "Submit"))
             {
-                SetDroneActive(!droneAvailable);
-                AudioSource.PlayClipAtPoint(toggleDroneSFX, transform.position);
+                if (shipDetails.FullyEquipped())
+                {
+                    CreateDrone();
+                    SetDroneActive(!droneAvailable);                    
+                    AudioSource.PlayClipAtPoint(toggleDroneSFX, transform.position);
+                } else
+                {
+                    AudioSource.PlayClipAtPoint(errorSFX,transform.position);
+                }
             }
             if ( OVRInput.Get(OVRInput.Button.PrimaryIndexTrigger) && droneAvailable)
             {
                 LaunchDrone();
             }
+        }
+    }
+
+    private void CreateDrone()
+    {
+        Destroy(fuselage);
+        fuselage = (GameObject)Instantiate(shipDetails.fuselage, transform);
+        SocketPositions socketPositions = fuselage.GetComponent<SocketPositions>();
+
+        Destroy(engine);
+        engine = (GameObject) Instantiate(shipDetails.engine, transform.position, transform.rotation, transform);
+        engine.transform.localPosition = socketPositions.enginePosition;
+        
+        Destroy(wing);
+        wing = (GameObject)Instantiate(shipDetails.wing, transform.position, transform.rotation, transform);
+        wing.transform.localPosition = socketPositions.wingPosition;
+
+        Destroy(nose);
+        nose = (GameObject)Instantiate(shipDetails.nose, transform.position, transform.rotation, transform);
+        nose.transform.localPosition = socketPositions.NosePosition;
+
+        //TODO fix occlusion rendering on spawned drone
+        for (int i = 0; i < engine.GetComponent<Renderer>().materials.Length; i++)
+        {
+            engine.GetComponent<Renderer>().materials[i].shader = Shader.Find("BumpedOutline");
         }
     }
 

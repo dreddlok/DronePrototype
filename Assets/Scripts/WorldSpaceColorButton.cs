@@ -12,19 +12,18 @@ public class WorldSpaceColorButton : MonoBehaviour {
     public Material highlightMaterial;
     public Color color;
     public MeshRenderer target;
+    public MeshRenderer previewTarget;
     public SpriteRenderer preview;
     public WorldSpaceColorButton[] toggleGroup;
-
-    private Color ogColour;
+    
     private Material ogMaterial;
-    private Renderer renderer;
+    private Renderer meshRenderer;
 
     // Use this for initialization
     void Start () {
         buttonHighlight.SetActive(false);
-        renderer = GetComponent<Renderer>();
-        ogColour = renderer.material.color;
-        ogMaterial = renderer.material;
+        meshRenderer = GetComponent<Renderer>();
+        ogMaterial = meshRenderer.material;
         toggleGroup = transform.parent.GetComponentsInChildren<WorldSpaceColorButton>();
     }
 	
@@ -62,6 +61,7 @@ public class WorldSpaceColorButton : MonoBehaviour {
         buttonHighlight.SetActive(true);
         AudioSource.PlayClipAtPoint(selectSFX, transform.position);
         target.material.color = color;
+        previewTarget.material.color = color;
     }
 
     private void OnTriggerEnter(Collider other)
@@ -69,7 +69,7 @@ public class WorldSpaceColorButton : MonoBehaviour {
         if(other.tag == "TriggerSphere")
         {
             highlighted = true;
-            renderer.material = highlightMaterial;
+            meshRenderer.material = highlightMaterial;
             AudioSource.PlayClipAtPoint(highlightSFX, transform.position);
         }
     }
@@ -79,7 +79,7 @@ public class WorldSpaceColorButton : MonoBehaviour {
         if (other.tag == "TriggerSphere")
         {
             highlighted = false;
-            renderer.material = ogMaterial;
+            meshRenderer.material = ogMaterial;
         }
     }
 }

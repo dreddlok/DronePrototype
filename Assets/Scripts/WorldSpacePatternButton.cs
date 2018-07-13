@@ -12,13 +12,13 @@ public class WorldSpacePatternButton : MonoBehaviour {
     public Material highlightMaterial;
     public Color color;
     public MeshRenderer target;
+    public MeshRenderer previewTarget;
     public SpriteRenderer preview;
     public Texture texture;
 
     private WorldSpacePatternButton[] toggleGroup;
-    private Color ogColour;
     private Material ogMaterial;
-    private Renderer renderer;
+    private Renderer meshRenderer;
     private bool triggerDown = false;
 
     // Use this for initialization
@@ -26,9 +26,8 @@ public class WorldSpacePatternButton : MonoBehaviour {
         buttonHighlight = transform.Find("ButtonSelectedSprite").gameObject;
         preview = transform.Find("Image").GetComponent<SpriteRenderer>();
         buttonHighlight.SetActive(false);
-        renderer = GetComponent<Renderer>();
-        ogColour = renderer.material.color;
-        ogMaterial = renderer.material;
+        meshRenderer = GetComponent<Renderer>();
+        ogMaterial = meshRenderer.material;
         toggleGroup = transform.parent.GetComponentsInChildren<WorldSpacePatternButton>();
     }
 	
@@ -61,6 +60,7 @@ public class WorldSpacePatternButton : MonoBehaviour {
         buttonHighlight.SetActive(true);
         AudioSource.PlayClipAtPoint(selectSFX, transform.position);
         target.material.SetTexture("_MainTex", texture);
+        previewTarget.material.SetTexture("_MainTex", texture);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -68,7 +68,7 @@ public class WorldSpacePatternButton : MonoBehaviour {
         if(other.tag == "TriggerSphere")
         {
             highlighted = true;
-            renderer.material = highlightMaterial;
+            meshRenderer.material = highlightMaterial;
             AudioSource.PlayClipAtPoint(highlightSFX, transform.position);
         }
     }
@@ -78,7 +78,7 @@ public class WorldSpacePatternButton : MonoBehaviour {
         if (other.tag == "TriggerSphere")
         {
             highlighted = false;
-            renderer.material = ogMaterial;
+            meshRenderer.material = ogMaterial;
         }
     }
 }

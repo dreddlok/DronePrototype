@@ -15,6 +15,8 @@ public class ComponentSocket : MonoBehaviour {
     public GameObject compatibleComponent;
     public bool partEquipped = false;
 
+    private OVRInput.Controller currentHandHoldingPart;
+
 
     private void OnDrawGizmos()
     {
@@ -43,7 +45,9 @@ public class ComponentSocket : MonoBehaviour {
         if (other.gameObject.tag == socketType)
         {
             AudioSource.PlayClipAtPoint(highlightSFX, transform.position);
-            
+            currentHandHoldingPart = other.transform.parent.transform.parent.GetComponent<TouchController>().controller;
+
+
             if (partEquipped)
             {
                 equippedPart.SetActive(false);
@@ -71,7 +75,7 @@ public class ComponentSocket : MonoBehaviour {
 
     private void EquipComponent()
     {
-        if (Input.GetAxis("RGripTrigger") < 1)
+        if (GetCurrentHandGripRelease())
         {
             if (compatibleComponent != null)
             {
@@ -86,6 +90,11 @@ public class ComponentSocket : MonoBehaviour {
                 equippedPart.transform.localScale = Vector3.one;
             }
             equippedPart.tag = socketType;
+            Renderer eqPartRenderer = equippedPart.GetComponent<Renderer>();
+            for (int i = 0; i < eqPartRenderer.materials.Length; i++)
+            {
+                eqPartRenderer.materials[i].shader = Shader.Find("Standard");
+            }
             partEquipped = true;
             if (equipSFXCooldown <= 0)
             {
@@ -114,5 +123,23 @@ public class ComponentSocket : MonoBehaviour {
             transform.parent.GetComponent<ShipDetails>().RefreshStats();
             compatibleComponentInVicinity = false;
         }
+    }
+
+    private bool GetCurrentHandGripRelease()
+    {
+        if (currentHandHoldingPart == OVRInput.Controller.RTouch)
+        {
+            if (Input.GetAxis("RGripTrigger") < 1)
+            {
+                return true;
+            }
+        } else
+        {
+            if (Input.GetAxis("LGripTrigger") < 1)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }

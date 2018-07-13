@@ -28,13 +28,14 @@ public class Flying : MonoBehaviour {
     public GameObject wing;
     public ShipDetails shipDetails;
     public AudioClip errorSFX;
+    public Shader droneShader;
 
     private bool droneAvailable;
     private Vector3 currentAngle;
     private bool inFlight = false;
     private Vector3 startPos;
     private Quaternion startRot;
-    private bool fireTriggerReleased = true;
+    private bool fireTriggerReleased;
 
     private void Start()
     {
@@ -48,10 +49,30 @@ public class Flying : MonoBehaviour {
         OVRInput.Update();
         OVRInput.FixedUpdate();
 
-        if (inFlight && Input.GetButtonDown(buttonName: "Submit"))
+        if (OVRInput.Get(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.RTouch) && fireTriggerReleased == false)
+        {
+            if (inFlight)
+            {
+                fireTriggerReleased = true;
+                Fire();
+                Debug.Log("fire pressed " + Time.time);
+            }
+        }
+        if ((OVRInput.Get(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.RTouch) == false))
+        {
+            fireTriggerReleased = false;
+        }
+
+            if (inFlight && Input.GetButtonDown(buttonName: "Submit"))
         {
             ReturnDrone();
-        } else
+        }
+
+        if (inFlight == false && Input.GetAxis("LFireTrigger") == 1 && droneAvailable )
+        {
+            LaunchDrone();
+        }
+
         if (inFlight)
         {
             switch (controlMode)
@@ -61,21 +82,11 @@ public class Flying : MonoBehaviour {
                 case FlightControlMode.Thumbstick: RotateWithThumsticks();
                     break;
             }
-            Accelerate();            
+            Accelerate();
+            Firing();
             GetComponent<AudioSource>().pitch = speed; 
             transform.position += transform.forward * Time.deltaTime * speed;
-            if (Input.GetAxis("FireTrigger") == 1 && fireTriggerReleased == false)
-            {                
-                Firing();
-                fireTriggerReleased = true;
-            }
-            if (Input.GetAxis("FireTrigger") < 1)
-            {
-                fireTriggerReleased = false;
-                CancelInvoke("Firing");
-            }
-
-            } else
+        } else
         {
             if (Input.GetButtonDown(buttonName: "Submit"))
             {
@@ -89,10 +100,6 @@ public class Flying : MonoBehaviour {
                     AudioSource.PlayClipAtPoint(errorSFX,transform.position);
                 }
             }
-            if ( OVRInput.Get(OVRInput.Button.PrimaryIndexTrigger) && droneAvailable)
-            {
-                LaunchDrone();
-            }
         }
     }
 
@@ -101,23 +108,27 @@ public class Flying : MonoBehaviour {
         Destroy(fuselage);
         fuselage = (GameObject)Instantiate(shipDetails.fuselage, transform);
         SocketPositions socketPositions = fuselage.GetComponent<SocketPositions>();
+        fuselage.GetComponent<Renderer>().material.shader = droneShader;
 
         Destroy(engine);
         engine = (GameObject) Instantiate(shipDetails.engine, transform.position, transform.rotation, transform);
         engine.transform.localPosition = socketPositions.enginePosition;
-        
+        engine.GetComponent<Renderer>().material.shader = droneShader;
+
         Destroy(wing);
         wing = (GameObject)Instantiate(shipDetails.wing, transform.position, transform.rotation, transform);
         wing.transform.localPosition = socketPositions.wingPosition;
+        wing.GetComponent<Renderer>().material.shader = droneShader;
 
         Destroy(nose);
         nose = (GameObject)Instantiate(shipDetails.nose, transform.position, transform.rotation, transform);
         nose.transform.localPosition = socketPositions.NosePosition;
+        nose.GetComponent<Renderer>().material.shader = droneShader;
 
         //TODO fix occlusion rendering on spawned drone
         for (int i = 0; i < engine.GetComponent<Renderer>().materials.Length; i++)
         {
-            engine.GetComponent<Renderer>().materials[i].shader = Shader.Find("BumpedOutline");
+            //engine.GetComponent<Renderer>().materials[i].shader = Shader.Find("BumpedOutline");
         }
     }
 
@@ -152,7 +163,7 @@ public class Flying : MonoBehaviour {
 
     private void Accelerate()
     {
-        if (OVRInput.Get(OVRInput.Button.PrimaryIndexTrigger))
+       if (Input.GetAxis("LFireTrigger") == 1)
         {
             if (speed < maxSpeed)
             {
@@ -169,10 +180,28 @@ public class Flying : MonoBehaviour {
 
     private void Firing()
     {        
-            var bullet = (GameObject)Instantiate(laser, transform.position,  transform.rotation);
-            AudioSource.PlayClipAtPoint(laserSFX, transform.position);
-            // Destroy the bullet after 2 seconds
-            Destroy(bullet, 2.0f);
+        if (OVRInput.Get(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.RTouch))//(OVRInput.Get(OVRInput.RawButton.RIndexTrigger) && fireTriggerReleased == false) //(Input.GetAxis("Fire2") == 1 && fireTriggerReleased == false)
+        {
+            if (fireTriggerReleased == false)
+            {
+                fireTriggerReleased = true;
+                var bullet = (GameObject)Instantiate(laser, transform.position, transform.rotation);
+                AudioSource.PlayClipAtPoint(laserSFX, transform.position);
+                Destroy(bullet, 2.0f);
+            }
+            
+        }
+        else
+        {
+            fireTriggerReleased = false;
+        }
+    }
+
+    private void Fire()
+    {
+        var bullet = (GameObject)Instantiate(laser, transform.position, transform.rotation);
+        AudioSource.PlayClipAtPoint(laserSFX, transform.position);
+        Destroy(bullet, 2.0f);
     }
 
     private void RotateWithController()

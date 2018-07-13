@@ -17,7 +17,7 @@ public class WorldSpaceSlider : MonoBehaviour {
         
     private Transform triggerTransform;
     private Renderer Meshrenderer;
-    private bool triggerDown = false;
+    //private bool triggerDown = false;
     private Material ogMaterial;
 
     private void Start()
@@ -54,7 +54,7 @@ public class WorldSpaceSlider : MonoBehaviour {
         if (Input.GetAxis("FireTrigger") < 1)
         {
             grabbed = false;
-            triggerDown = true;
+            //triggerDown = true;
             GetComponent<AudioSource>().Stop();
         }
         

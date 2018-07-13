@@ -17,6 +17,7 @@ public class LaserBolt : MonoBehaviour {
     {
         AudioSource.PlayClipAtPoint(collisonSFX, transform.position);
         var impact = (GameObject)Instantiate(impactEffect, transform.position, Quaternion.Inverse(transform.rotation));
+        Destroy(impact, 2.0f);
         Destroy(gameObject);
     }
 }

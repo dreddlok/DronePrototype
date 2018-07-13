@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class WorldSpaceButton : MonoBehaviour {
 
-    public enum Mode { Color, Custom, Pattern, Decal };
+    public enum Mode { Color, Custom, Pattern, Decal, Toggle, Fuselage, Wing, Engine, Nose };
     public GameObject buttonHighlight;
     public bool selected;
     public bool highlighted;
@@ -14,18 +14,24 @@ public class WorldSpaceButton : MonoBehaviour {
     public Mode mode;
     public GameObject toggleTarget;
 
-    private Color ogColour;
     private Material ogMaterial;
-    private Renderer renderer;
+    private Renderer meshRenderer;
     private WorldSpaceButton[] toggleGroup;
+    private bool triggerPressed;
 
     // Use this for initialization
     void Start () {
         //buttonHighlight.SetActive(false);
-        renderer = GetComponent<Renderer>();
-        ogColour = renderer.material.color;
-        ogMaterial = renderer.material;
-        toggleGroup = transform.parent.GetComponentsInChildren<WorldSpaceButton>();
+        meshRenderer = GetComponent<Renderer>();
+        ogMaterial = meshRenderer.material;
+        if (transform.parent)
+        {
+            toggleGroup = transform.parent.GetComponentsInChildren<WorldSpaceButton>();
+        }
+        if (mode == Mode.Toggle)
+        {
+            toggleTarget.SetActive(selected);
+        }
     }
 	
 	// Update is called once per frame
@@ -33,38 +39,86 @@ public class WorldSpaceButton : MonoBehaviour {
         OVRInput.Update();
         OVRInput.FixedUpdate();
 
-        if (highlighted)
+        if (highlighted && triggerPressed == false)
         {
-            if (Input.GetAxis("FireTrigger") == 1 && selected == false)
+            if (Input.GetAxis("FireTrigger") == 1)
             {                
-                ButtonEffect();
+               if (mode != Mode.Toggle )
+                {
+                    if (selected == false)
+                    {
+                        ButtonEffect();
+                        triggerPressed = true;
+                    }
+                } else
+                {
+                    ButtonEffect();
+                    triggerPressed = true;
+                }
             }
+        }
+
+        if (Input.GetAxis("FireTrigger") < 1)
+        {
+            triggerPressed = false;
         }
 
     }
 
     private void ButtonEffect()
     {
-        for (int i = 0; i < toggleGroup.Length; i++)
+        if (toggleGroup != null)
         {
-            toggleGroup[i].selected = false;
-            if (toggleGroup[i].toggleTarget)
+            for (int i = 0; i < toggleGroup.Length; i++)
             {
-                toggleGroup[i].toggleTarget.SetActive(false);
+                toggleGroup[i].selected = false;
+                if (toggleGroup[i].toggleTarget)
+                {
+                    toggleGroup[i].toggleTarget.SetActive(false);
+                }
+                toggleGroup[i].highlighted = false;
+                toggleGroup[i].buttonHighlight.SetActive(false);
             }
-            toggleGroup[i].highlighted = false;
-            toggleGroup[i].buttonHighlight.SetActive(false);
-        }
-        selected = true; ;
-        buttonHighlight.SetActive(true);
+        }       
+        
         AudioSource.PlayClipAtPoint(selectSFX, transform.position);
         switch (mode)
         {
             case Mode.Color:
                 toggleTarget.SetActive(true);
+                buttonHighlight.SetActive(true);
+                selected = true;
                 break;
             case Mode.Pattern:
                 toggleTarget.SetActive(true);
+                buttonHighlight.SetActive(true);
+                selected = true;
+                break;
+            case Mode.Decal:
+                toggleTarget.SetActive(true);
+                buttonHighlight.SetActive(true);
+                selected = true;
+                break;
+            case Mode.Toggle:
+                selected = !selected;
+                buttonHighlight.SetActive(selected);
+                toggleTarget.SetActive(selected);
+                break;
+            case Mode.Fuselage:
+                buttonHighlight.SetActive(true);
+                selected = true;
+                break;
+            case Mode.Wing:
+                buttonHighlight.SetActive(true);
+                selected = true;
+                break;
+            case Mode.Engine:
+                buttonHighlight.SetActive(true);
+                selected = true;
+                break;
+            case Mode.Nose:
+                buttonHighlight.SetActive(true);
+                selected = true;
                 break;
         }
     }
@@ -74,7 +128,7 @@ public class WorldSpaceButton : MonoBehaviour {
         if(other.tag == "TriggerSphere")
         {
             highlighted = true;
-            renderer.material = highlightMaterial;
+            meshRenderer.material = highlightMaterial;
             AudioSource.PlayClipAtPoint(highlightSFX, transform.position);
         }
     }
@@ -84,7 +138,9 @@ public class WorldSpaceButton : MonoBehaviour {
         if (other.tag == "TriggerSphere")
         {
             highlighted = false;
-            renderer.material = ogMaterial;
+            meshRenderer.material = ogMaterial;
         }
     }
+
+
 }

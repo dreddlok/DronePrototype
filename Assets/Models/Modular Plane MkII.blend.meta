@@ -10,23 +10,28 @@ ModelImporter:
     100004: //RootNode
     100006: nose
     100008: Wing
+    100010: Fuselage__Decal
     400000: Engine
     400002: Fuselage
     400004: //RootNode
     400006: nose
     400008: Wing
+    400010: Fuselage__Decal
     2300000: Engine
     2300002: Fuselage
     2300004: nose
     2300006: Wing
+    2300008: Fuselage__Decal
     3300000: Engine
     3300002: Fuselage
     3300004: nose
     3300006: Wing
+    3300008: Fuselage__Decal
     4300000: nose
     4300002: Engine
     4300004: Wing
     4300006: Fuselage
+    4300008: Fuselage__Decal
     7400000: Default Take
     9500000: //RootNode
   materials:
